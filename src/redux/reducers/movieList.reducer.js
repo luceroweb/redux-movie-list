@@ -3,41 +3,78 @@ const initialState = null;
 const movieListReducer = (state = initialState, action) => {
     switch(action.type) {
         case 'GET_MOVIE_LIST': {
-            const movieList = localStorage.getItem('movieList');
+            let movieLists = localStorage.getItem('movieLists');
 
-            return movieList
-                ? JSON.parse(movieList)
-                : state;
+            return movieLists ? JSON.parse(movieLists) : state;
+        }
+        case 'GET_ALL_MOVIE_LISTS': {
+          let movieLists = localStorage.getItem('movieLists');
+          return movieLists ? JSON.parse(movieLists) : state
         }
         case 'ADD_MOVIE_TO_LIST': {
-          let movieList = localStorage.getItem('movieList');
-          if (movieList) {
-            movieList = JSON.parse(movieList);
-            movieList.list.push(action.payload);
-          } else {
-            movieList = { list: [ action.payload ]}
-          }
+          debugger;
+          let movieLists = JSON.parse(localStorage.getItem('movieLists'));
+          let movieList = getListById(movieLists, action.id)
+          movieList.list.push(action.movie)
 
-          localStorage.setItem('movieList', JSON.stringify(movieList));
+          const index = movieLists.findIndex(group => group.id === action.id);
+          movieLists[index] = movieList;
 
-          return movieList;
+          localStorage.setItem('movieLists', JSON.stringify(movieLists));
+
+          return movieLists;
         }
         case 'REMOVE_MOVIE_FROM_LIST': {
-          let movieList = localStorage.getItem('movieList');
-          movieList = JSON.parse(movieList);
-          const updatedList = movieList.list.filter((movieFromList) => movieFromList.imdbID !== action.payload.imdbID);
-          if(updatedList.length) {
-            movieList.list = updatedList;
-            localStorage.setItem('movieList', JSON.stringify(movieList));
+          let movieLists = localStorage.getItem('movieLists');
+          movieLists = JSON.parse(movieLists);
+
+          let group = getListById(movieLists, action.id)
+
+          const updatedList = group.list.filter((movieList) => movieList.imdbID !== action.movie.imdbID);
+          const index = movieLists.findIndex(movieLists => movieLists.id === action.id);
+
+          if (updatedList.length > 0 ){
+            movieLists[index].list = updatedList;
           } else {
-            localStorage.removeItem('movieList');
+            movieLists.splice(index, 1); // remove list
           }
 
-          return movieList;
+          localStorage.setItem('movieLists', JSON.stringify(movieLists));
+
+          return movieLists ? movieLists : null;
         }
+        case 'CREATE_A_NEW_LIST': {
+          let movieLists = localStorage.getItem('movieLists');
+          let movieList = {};
+          let listId = createListId();
+
+          movieLists = JSON.parse(movieLists);
+
+          if (!movieLists){
+            movieLists = []; // create an array
+          }
+
+          movieList = {
+            id: listId,
+            name: action.name,
+            list: [action.movie]
+          }
+
+          movieLists.push(movieList);
+          localStorage.setItem('movieLists', JSON.stringify(movieLists));
+
+          return movieLists;
+        }
+
         default:
             return state;
     }
 }
 
 export default movieListReducer;
+
+const getListById = (lists, listId) => lists.filter((list) => list.id === listId)[0];
+
+const createListId = () => {
+    return Math.floor(Math.random() * 101);
+  }

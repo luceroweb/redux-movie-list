@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
-import { getMovieList, addMovieToList } from '../redux/actions/movieList.actions';
+import { getMovieList, addMovieToList, createANewList } from '../redux/actions/movieList.actions';
+import Modal from './Modal';
+import CreateNewList from './Lists/CreateNewList';
 import MovieApiService from '../services/movieApi.service';
 import Pagination from './navigation/Pagination';
 import SearchBar from './navigation/SearchBar';
@@ -10,12 +12,13 @@ import Row from 'react-bootstrap/Row';
 import Col from  'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
 
-let MovieSearch = ({ movieList, getMovieList, addMovieToList }) => {
+let MovieSearch = ({ movieList, getMovieList, addMovieToList, createANewList }) => {
   const movieApiService = new MovieApiService();
-  const [ searchResults, setSearchResults ] = useState(); 
+  const [ searchResults, setSearchResults ] = useState();
   const [ title, setTitle ] = useState();
   const [ currentPage, setCurrentPage ] = useState(1);
   const [ selectedMovie, setSelectedMovie ] = useState(null);
+  const [ addToList, setAddToList ] = useState(null);
 
   useEffect(() => {
     getMovieList();
@@ -39,12 +42,13 @@ let MovieSearch = ({ movieList, getMovieList, addMovieToList }) => {
     runSearch();
   }
 
-  const addToMovieList = async (id) => {
-    const result = await movieApiService.getMovieById(id);
-    addMovieToList(result);
+  const createOrSelectMovieList = (id) => {	
+    setAddToList(id);	
   }
 
   const onClose = () => setSelectedMovie(null);
+
+  const onListClose = () => setAddToList(null);
 
   return (
     <Container>
@@ -52,22 +56,39 @@ let MovieSearch = ({ movieList, getMovieList, addMovieToList }) => {
         { searchResults
           ? <>
             <Row>
-              { searchResults.Search.map((movie,index) => (
+              { searchResults.Search.map((movie,index,movieList) => (
                 <Col xs={12} md={6} lg={3} key={movie.imdbID} className="mb-4">
-                  <MovieCard 
+                  <MovieCard
                     movie={movie}
                     movieList={movieList}
                     onClose={onClose}
                     selectedMovie={selectedMovie}
                     setSelectedMovie={setSelectedMovie}
                     key={index}
-                    buttons={
-                      <Button variant="success" onClick={() => addToMovieList(movie.imdbID)}>
-                        <i className="bi bi-bookmark-plus"></i>&nbsp;
-                        Add To List
-                      </Button>
+                    buttons={movieList.list?.indexOf(movie.imdbID)	
+                      ?	
+                        <Button variant="primary">	
+                          <i className="bi bi-bookmark-plus"></i>&nbsp;	
+                          In Movie List	
+                        </Button>	
+                      :                        <Button variant="success" onClick={() => createOrSelectMovieList(movie.imdbID)}>	
+                          <i className="bi bi-bookmark-plus"></i>&nbsp;	
+                          Add to list	
+                        </Button>
                     }
                   />
+                  { addToList === movie.imdbID &&	
+                    <Modal	
+                      movie={movie}	
+                      onClose={onListClose}	
+                      children={ 
+                        <CreateNewList
+                          movie={movie}
+                          onListClose={onListClose}
+                        /> 
+                      }	
+                    />	
+                  }
                 </Col>
               ))}
             </Row>
@@ -94,7 +115,7 @@ const mapStateToProps = state => ({
 
 MovieSearch = connect(
   mapStateToProps,
-  { getMovieList, addMovieToList }
+  { getMovieList, addMovieToList, createANewList }
 )(MovieSearch)
 
 export default MovieSearch;

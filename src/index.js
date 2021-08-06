@@ -15,7 +15,7 @@ ReactDOM.render(
       <Navbar/> 
       <Switch>
         <Route exact path="/" component={MovieSearchResults} />
-        <Route path="/movie-list" component={MovieList} />
+        <Route path="/movie-list/:id" component={MovieList} />
       </Switch>
     </HashRouter>
   </Provider>,

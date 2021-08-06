@@ -25,7 +25,7 @@ const MovieCard = ({ movie, buttons, onClose, selectedMovie, setSelectedMovie })
           title={movie.Title}
           onClose={onClose}
           buttons={buttons}
-          children={ <MovieDetails imdbID={selectedMovie} /> } 
+          children={ <MovieDetails imdbID={selectedMovie} /> }
         />
       }
     </div>
